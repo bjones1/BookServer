@@ -39,6 +39,7 @@ from ..crud import (
     fetch_all_course_attributes,
     fetch_subchapters,
 )
+#from ..internal import team
 from ..models import UseinfoValidation
 from ..session import is_instructor
 from ..internal.utils import url_for
@@ -364,6 +365,7 @@ async def serve_page(
         show_rs_banner=show_rs_banner,
         show_ethical_ad=serve_ad,
         worker_name=worker_name,
+        #team=team,
         **course_attrs,
     )
     # See `templates <https://fastapi.tiangolo.com/advanced/templates/>`_.
