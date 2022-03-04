@@ -10,17 +10,18 @@
 # ----------------
 import re
 from typing import Any, List
+from urllib.parse import urlparse, urlunparse
 
 # Third-party imports
 # -------------------
-from fastapi import status
+from fastapi import Request, status
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 
 #
 # Local application imports
 # -------------------------
-# None.
+from ..config import BookServerConfig, settings
 
 
 # Functions
@@ -63,3 +64,21 @@ def http_422error_detail(
     err_type: str,
 ) -> List[dict]:
     return [{"loc": loc, "msg": msg, "type": err_type}]
+
+
+# Starlette provides `url_for <https://www.starlette.io/routing/#reverse-url-lookups>`_, but this doesn't work without some `configuration fixes <https://github.com/encode/starlette/issues/538#issuecomment-518748568>`_ I can't seem to accomplish. Instead, the returned URL is **always** http, even when nginx serves https. Here's a kludgy workaround.
+def url_for(
+    # The request, which is required to perform URL lookups.
+    request: Request,
+    # The same parameters that `url_for`_ requires.
+    name: str,
+    **path_params: Any
+) -> str:
+
+    url = request.url_for(name, **path_params)
+    if settings.book_server_config == BookServerConfig.production:
+        # In production, assume HTTPS.
+        return urlunparse(urlparse(url)._replace(scheme="https"))
+    else:
+        # Otherwise, leave the URL unchanged.
+        return url
