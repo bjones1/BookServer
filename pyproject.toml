@@ -42,7 +42,7 @@ asyncpg = "^0.24.0"
 SQLAlchemy = "^1.0.0"
 aiosqlite = "^0.17.0"
 redis = "^4.0.0"
-runestone = "^6.0.0"
+runestone = { path = "../RunestoneComponents", develop = true }
 pyhumps = "^3.0.0"
 bleach = "^4.0.0"
 multi-await = "^1.0.0"
