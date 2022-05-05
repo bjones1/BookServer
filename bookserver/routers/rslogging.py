@@ -159,7 +159,7 @@ async def log_book_event(
                 # The grader should also be defined if there's feedback.
                 assert rcd.grader
                 # Show feedback for students when not in exam mode and for instructors always.
-                show_feedback = not user.is_exam_mode or is_instructor(request)
+                show_feedback = not user.is_exam_mode or await is_instructor(request)
                 response_dict.update(await rcd.grader(valid_table, feedback, show_feedback))
 
             ans_idx = await create_answer_table_entry(valid_table, entry.event)

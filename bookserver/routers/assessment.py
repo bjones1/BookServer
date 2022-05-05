@@ -80,8 +80,9 @@ async def get_assessment_results(
     # Otherwise if the user is an instructor then use the provided
     # sid (it could be any student in the class). If none is provided then
     # use the user objects username
+    is_inst = await is_instructor(request)
     sid = user.username
-    if await is_instructor(request):
+    if is_inst:
         if request_data.sid:
             sid = request_data.sid
     else:
@@ -104,7 +105,7 @@ async def get_assessment_results(
         # The grader should also be defined if there's feedback.
         assert rcd.grader
         # Show feedback for students when not in exam mode and for instructors always.
-        show_feedback = not user.is_exam_mode or is_instructor(request)
+        show_feedback = not user.is_exam_mode or is_inst
         # Use the grader to add server-side feedback to the returned dict.
         ret.update(await rcd.grader(row, feedback, show_feedback))
 
