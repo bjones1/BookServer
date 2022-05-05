@@ -50,8 +50,8 @@ async def fitb_feedback(
     fitb_validator: Any,
     # The feedback to use when grading this question, taken from the ``feedback`` field of the ``fitb_answers`` table.
     feedback: Dict[Any, Any],
-    # True if in exam mode, meaning don't show if the answer is correct or not.
-    is_exam_mode: bool,
+    # True if this routine shouldn't show if the answer is correct or not. This is typically used when students are taking an exam / some type of summative assessment.
+    show_feedback: bool,
 ) -> Dict[str, Any]:
     # Grade based on this feedback. The new format is JSON; the old is
     # comma-separated.
@@ -121,17 +121,17 @@ async def fitb_feedback(
     # Return grading results to the client for a non-exam scenario.
     return (
         dict(
-            correct=True,
-            displayFeed=["Response recorded."] * len(answer),
-            isCorrectArray=[True] * len(answer),
-            percent=1,
-        )
-        if is_exam_mode
-        else dict(
             correct=correct,
             displayFeed=displayFeed,
             isCorrectArray=isCorrectArray,
             percent=percent,
+        )
+        if show_feedback
+        else dict(
+            correct=True,
+            displayFeed=["Response recorded."] * len(answer),
+            isCorrectArray=[True] * len(answer),
+            percent=1,
         )
     )
 
