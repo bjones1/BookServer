@@ -107,7 +107,7 @@ async def get_assessment_results(
         # Show feedback for students when not in exam mode and for instructors always.
         show_feedback = not user.is_exam_mode or is_inst
         # Use the grader to add server-side feedback to the returned dict.
-        ret.update(await rcd.grader(row, feedback, show_feedback))
+        ret.update(await rcd.grader(row, feedback, False, show_feedback))
 
     # get grade and instructor feedback if Any
     grades = await fetch_question_grade(sid, request_data.course, request_data.div_id)

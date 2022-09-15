@@ -48,11 +48,16 @@ def init_graders():
 async def fitb_feedback(
     # The validator for the ``fitb_answers`` table containing data before it's stored in the db. This function updates the grade stored in the validator.
     fitb_validator: Any,
-    # The feedback to use when grading this question, taken from the ``feedback`` field of the ``fitb_answers`` table.
+    # The feedback to use when grading this question, taken from the ``feedback`` field of the ``fitb_answers`` table or provided in the request to the `log_book_event endpoint`.
     feedback: Dict[Any, Any],
+    # The origin of the ``feedback``: True if this comes from the `log_book_event endpoint` (meaning it's an answer just provided by a student to be graded); False if this comes from the database (meaning we need to recompute the feedback for an existing answer).
+    is_from_student: bool,
     # True if this routine shouldn't show if the answer is correct or not. This is typically used when students are taking an exam / some type of summative assessment.
     show_feedback: bool,
 ) -> Dict[str, Any]:
+    # We need to recompute the feedback this function provides, regardless of its origin. Therefore, mark this parameter as unused.
+    del is_from_student
+
     # Grade based on this feedback. The new format is JSON; the old is
     # comma-separated.
     answer_json = fitb_validator.answer
@@ -138,7 +143,19 @@ async def fitb_feedback(
 
 # lp feedback
 # ===========
-async def lp_feedback(lp_validator: Any, feedback: Dict[Any, Any], is_exam_mode: bool):
+async def lp_feedback(
+    lp_validator: Any,
+    feedback: Dict[Any, Any],
+    is_from_student: bool,
+    is_exam_mode: bool,
+):
+    # Unused parameter.
+    del is_exam_mode
+
+    # If this feedback comes from the database, then we can just return the existing entry; this saves the CPU time of recompiling then rerunning the code.
+    if not is_from_student:
+        return []
+
     # Begin by reformatting the answer for storage in the database. Do this now, so the code will be stored correctly even if the function returns early due to an error.
     try:
         code_snippets = json.loads(lp_validator.answer)
