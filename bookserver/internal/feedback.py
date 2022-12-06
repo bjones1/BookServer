@@ -234,11 +234,11 @@ async def lp_feedback(
         except Exception as e:
             return {"errors": ["Error in build task: {}".format(e)]}
         else:
-            # Strip whitespace and return only the last 4K or data or so.
+            # Strip whitespace and return only the last 20K or data or so.
             # There's no need for more -- it's probably just a crashed or
             # confused program spewing output, so don't waste bandwidth or
             # storage space on it.
-            resultString = output.strip()[-4096:]
+            resultString = output.strip()[-20000:]
             # Update the data to be stored in the database.
             lp_validator.answer = json.dumps(
                 dict(code_snippets=code_snippets, resultString=resultString)
