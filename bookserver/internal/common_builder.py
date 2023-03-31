@@ -198,13 +198,16 @@ def sim_run_mdb(
 ):
     # Get or create an instance of the simulator.
     po = _tls.__dict__.get("po")
-    if (
-        # If the simulator hasn't been started, ...
-        (not po)
-        # ... or it died, (re)create it.
-        or (po and po.poll() is not None)
-    ):
 
+    # If the process existed already but closed, shut down the old one first.
+    if po and ((po.poll() is not None) or po.should_kill):
+        on_exit = _tls.on_exit
+        on_exit()
+        atexit.unregister(on_exit)
+        po = None
+
+    # If the simulator hasn't been started (or was closed), start it.
+    if not po:
         # Create a temp file for the simulation results. Since the simulator doesn't close the file after the simulation finishes, it can't be deleted. Instead, we need a single file to be used for a simulation, read, then truncated.
         _tls.tempdir = tempdir = TemporaryDirectory()
         _tls.simout_path = Path(_tls.tempdir.name) / "mdb_simout.txt"
@@ -229,21 +232,29 @@ def sim_run_mdb(
             stderr=subprocess.STDOUT,
             env=sim_env,
         )
+        po.should_kill = False
         s = get_sim_setup_str_mdb(mcu_name)
         po.stdin.write(s)
         po.stdin.flush()
         _tls.po = po
 
         def on_exit():
-            # Shut down the simulator and end the simulation process.
-            po.communicate("quit\n")
+            # Shut down the simulator and end the simulation process if it's still running.
+            if po.poll() is None:
+                # Shut down nicely; kill if this fails.
+                try:
+                    po.communicate("quit\n", 5)
+                except subprocess.TimeoutExpired:
+                    po.kill()
             # Remove the simout file.
             simout_file.close()
             tempdir.cleanup()
 
-            # TODO: Need to kill the process as well, in case it's stuck.
-
         atexit.register(on_exit)
+        _tls.on_exit = on_exit
+        sim_started = True
+    else:
+        sim_started = False
 
     # Delete any previous simulation results.
     _tls.simout_file.truncate(0)
@@ -253,13 +264,18 @@ def sim_run_mdb(
     po.stdin.write(s)
     po.stdin.flush()
 
-    # Wait for it to finish by watching stdout.
-    end_time = time.time() + 15
+    # Wait for it to finish by watching stdout. Use a timeout, with extra time if the process was just started.
+    end_time = time.time() + 15 + (15 if sim_started else 0)
     output = []
     while time.time() < end_time:
         # If the process terminates (a not-``None`` return value), read the last output then exit the loop.
         if po.poll() is not None:
-            output.append(po.communicate()[0])
+            stdout_data, stderr_data = po.communicate()
+            if stderr_data:
+                output.append(stderr_data)
+            if stdout_data:
+                output.append(stdout_data)
+            output.append("Error: process terminated.")
             break
         line = po.stdout.readline()
         if not line:
@@ -269,6 +285,10 @@ def sim_run_mdb(
         if line == ">/*Simulation finished.*/\n":
             output = []
             break
+    else:
+        # The `while condition is false <https://docs.python.org/3/reference/compound_stmts.html#the-while-statement>`_, so a timeout occurred. Handle this by shutting down the current simulation. Note that the simulator script has a 12-second timeout; since this failed, we're out of sync with the simulator and must close it completely.
+        po.should_kill = True
+        output.append("Timeout: restarting simulator.\n")
 
     # Read then return the result, starting from the beginning of the file.
     _tls.simout_file.seek(0)
