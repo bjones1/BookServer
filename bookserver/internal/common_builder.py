@@ -215,15 +215,15 @@ def sim_run_mdb(
             _tls.simout_path, "w+", encoding="utf-8", errors="backslashreplace"
         )
 
-        # Java, by default, doesn't free memory until it gets low, making it a memory hog. The `Java command-line flags <https://docs.oracle.com/en/java/javase/13/docs/specs/man/java.html>`_ ``-Xms750M -Xmx750M`` specify a heap size of 750 MB. However, these options must go before the ``--jar`` option when invoking ``java``, meaning they require hand edits to ``mdb.bat/sh``; they can't be passed as parameters (which are placed after ``--jar`` by ``mdb.bat/sh``). Therefore, use the `JAVA_TOOL_OPTIONS <https://docs.oracle.com/javase/8/docs/technotes/guides/troubleshoot/envvars002.html>`_ env var to pass these parameters.
+        # Java, by default, doesn't free memory until it gets low, making it a memory hog. The `Java command-line flags <https://docs.oracle.com/en/java/javase/13/docs/specs/man/java.html>`_ ``-Xms750M -Xmx750M`` specify a heap size of 750 MB. However, these options must go before the ``--jar`` option when invoking ``java``, meaning they require hand edits to ``mdb.bat/sh``; they can't be passed as parameters (which are placed after ``--jar`` by ``mdb.bat/sh``). Therefore, use the `JAVA_TOOL_OPTIONS <https://docs.oracle.com/javase/8/docs/technotes/guides/troubleshoot/envvars002.html>`_ env var to pass these parameters. See also the `Java Platform, Standard Edition HotSpot Virtual Machine Garbage Collection Tuning Guide <https://docs.oracle.com/javase/8/docs/technotes/guides/vm/gctuning/>`_.
         sim_env = os.environ.copy()
-        sim_env["JAVA_TOOL_OPTIONS"] = "-Xms750M -Xmx750M"
+        # Per a conversation with Microchip's support team, this disables the start-up check for new language packs, which takes several seconds to complete. Since this doesn't have a big impact on performance and isn't documented (AFAIK), it's omitted.
+        ##"-Dpackslib.workonline=false",
+        sim_env["JAVA_TOOL_OPTIONS"] = "-Xms250M -Xmx250M"
         # Start the simulator.
         po = subprocess.Popen(
             [
                 mdb_path,
-                # Per a conversation with Microchip's support team, this disables the start-up check for new language packs, which takes several seconds to complete.
-                ##"-Dpackslib.workonline=false",
             ],
             text=True,
             shell=True,
