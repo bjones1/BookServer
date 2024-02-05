@@ -590,15 +590,19 @@ def verilog_builder(
     # Preprocess the test code with a random verification code, so that the student's source code won't hae access to the verification code.
     out_list = []
     verification_code = get_verification_code()
+    base_name = os.path.splitext(source_path)[0]
+    extension = os.path.splitext(source_path)[1]
     test_file_path = os.path.join(
         sphinx_base_path,
         sphinx_source_path,
-        os.path.splitext(source_path)[0] + "-test.v",
+        f"{base_name}-test{extension}",
     )
-    preproc_path = file_path + ".test.vp"
+    preproc_path = f"{file_path}.test{extension}p"
+    systemverilog_flag = ["-g2012"] if extension == ".sv" else []
     report_subprocess(
-        [
-            "iverilog",
+        ["iverilog"]
+        + systemverilog_flag
+        + [
             # Only do preprocessing; don't compile the result.
             "-E",
             # Pass the verification code.
@@ -615,8 +619,9 @@ def verilog_builder(
     # Compile the source and preprocessed test code.
     exe_path = file_path + ".exe"
     report_subprocess(
-        [
-            "iverilog",
+        ["iverilog"]
+        + systemverilog_flag
+        + [
             "-o",
             exe_path,
             file_path,

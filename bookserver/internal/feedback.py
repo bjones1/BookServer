@@ -296,7 +296,7 @@ def _platform_edit(
     elif ext == ".rs":
         # Rust doesn't support `setting line numbers <https://github.com/rust-lang/rfcs/issues/1862>`__ either.
         fmt = ""
-    elif ext == ".v":
+    elif ext == ".v" or ext == ".sv" :
         # Quoting from section 19.7 of the IEEE Standard for Verilog Hardware Description Language (IEEE Std 1364-2005), the syntax for this compiler directive is ```line number "filename" level``, where ``level == 0`` indicates that this line doesn't precede or follow an include directive.
         fmt = '`line 1 "box {}" 0\n'
     else:
