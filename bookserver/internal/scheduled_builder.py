@@ -611,7 +611,7 @@ def verilog_builder(
             preproc_path,
             test_file_path,
         ],
-        "Compile test code",
+        "Preprocess test code",
         cwd,
         out_list,
     )
@@ -624,8 +624,9 @@ def verilog_builder(
         + [
             "-o",
             exe_path,
-            file_path,
+            # Important: parse the test bench first, so that syntax errors in the user code don't bleed into the testbench. Reversing the order of these two files causes exactaly that problem.
             preproc_path,
+            file_path,
         ],
         "Compile",
         cwd,
