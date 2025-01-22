@@ -234,6 +234,11 @@ async def lp_feedback(
         except Exception as e:
             return {"errors": ["Error in build task: {}".format(e)]}
         else:
+            # The Verilog builder also returns a VCD file -- separate this.
+            if isinstance(output, list):
+                [output, vcd_contents] = output
+            else:
+                vcd_contents = None
             # Strip whitespace and return only the last 20K or data or so.
             # There's no need for more -- it's probably just a crashed or
             # confused program spewing output, so don't waste bandwidth or
@@ -247,7 +252,10 @@ async def lp_feedback(
             # Return just new data (not the code snippets) to the client.
             return {
                 # The answer.
-                "answer": {"resultString": resultString},
+                "answer": {
+                    "resultString": resultString,
+                    "vcd_contents": vcd_contents
+                },
                 "correct": correct,
             }
 

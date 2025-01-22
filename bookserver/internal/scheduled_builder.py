@@ -11,6 +11,7 @@
 # ----------------
 from io import open
 import os
+from pathlib import Path
 import shutil
 import subprocess
 import sys
@@ -104,7 +105,10 @@ def _scheduled_builder(
     except BuildFailed as e:
         out_list = e.out_list
         correct = e.correct
-    return "".join(out_list), correct
+    if isinstance(out_list, dict):
+        return ["".join(out_list[0]), out_list[1]], correct
+    else:
+        return "".join(out_list), correct
 
 
 # Utilities
@@ -646,4 +650,8 @@ def verilog_builder(
         out_list,
         include_stderr=True,
     )
-    return out_list, (100 if check_sim_out(out_list, verification_code) else 0)
+    try:
+        vcd_contents = (Path(cwd)/"dump.vcd").read_text()
+    except Exception as _e:
+        vcd_contents = ""
+    return {0: out_list, 1: vcd_contents}, (100 if check_sim_out(out_list, verification_code) else 0)
