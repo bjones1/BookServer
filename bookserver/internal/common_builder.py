@@ -80,7 +80,7 @@ def get_sim_str_sim30(
         "{}"
         # Run the program. From the help:
         # ; ``E  -Execute``
-        "E 10000\n"
+        "E 20000\n"
         # Quit. From the help:
         # ``Q  -Quit``
         "Q\n"
