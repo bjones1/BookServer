@@ -215,7 +215,7 @@ def runguard(
     # Set all (total, stack, etc) memory limits to SIZE kB. Omitted if this argument is falsey.
     memsize_kb=100000,
     # Set maximum created filesize to SIZE kB. Omitted if this argument is falsey.
-    filesize_kb=50,
+    filesize_kb=500,
     # Set maximum no. processes to N. Omitted if this argument is falsey.
     num_processes=1,
     # Disable core dumps when True
